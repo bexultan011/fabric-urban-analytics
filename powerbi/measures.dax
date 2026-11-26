@@ -1,0 +1,37 @@
+// ===== FactTaxiHourly =====
+Total Trips = SUM(FactTaxiHourly[trip_count])
+
+Paid Trips = SUM(FactTaxiHourly[trip_count]) - SUM(FactTaxiHourly[refund_count])
+
+Revenue USD = SUM(FactTaxiHourly[revenue_usd])
+
+Revenue EUR =
+SUMX(
+    FactTaxiHourly,
+    FactTaxiHourly[revenue_usd] / RELATED(DimDate[usd_per_eur])
+)
+
+Avg Revenue per Trip USD = DIVIDE([Revenue USD], [Paid Trips])
+
+Avg Distance (mi) = DIVIDE(SUM(FactTaxiHourly[total_distance_mi]), [Paid Trips])
+
+Avg Duration (min) = DIVIDE(SUM(FactTaxiHourly[total_duration_min]), SUM(FactTaxiHourly[duration_trip_count]))
+
+Effective USD per EUR = DIVIDE([Revenue USD], [Revenue EUR])
+
+// ===== FactAirQualityDaily =====
+Avg PM2.5 =
+CALCULATE(
+    AVERAGE(FactAirQualityDaily[avg_value]),
+    FactAirQualityDaily[parameter] = "pm25",
+    FactAirQualityDaily[is_low_coverage] = FALSE()
+)
+
+Avg NO2 (ppb) =
+CALCULATE(
+    AVERAGE(FactAirQualityDaily[avg_value]) * 1000,
+    FactAirQualityDaily[parameter] = "no2",
+    FactAirQualityDaily[is_low_coverage] = FALSE()
+)
+
+Stations = DISTINCTCOUNT(FactAirQualityDaily[station_key])
