@@ -1,0 +1,184 @@
+{
+    "name": "pl_ingest_taxi",
+    "objectId": "32c5926b-03a3-4564-bff9-d85784339461",
+    "properties": {
+        "activities": [
+            {
+                "name": "ForEach1",
+                "type": "ForEach",
+                "dependsOn": [],
+                "typeProperties": {
+                    "items": {
+                        "value": "@pipeline().parameters.months",
+                        "type": "Expression"
+                    },
+                    "isSequential": false,
+                    "batchCount": 4,
+                    "activities": [
+                        {
+                            "name": "Copy data1",
+                            "type": "Copy",
+                            "dependsOn": [],
+                            "policy": {
+                                "timeout": "0.12:00:00",
+                                "retry": 0,
+                                "retryIntervalInSeconds": 30,
+                                "secureOutput": false,
+                                "secureInput": false
+                            },
+                            "typeProperties": {
+                                "source": {
+                                    "type": "BinarySource",
+                                    "storeSettings": {
+                                        "type": "HttpReadSettings",
+                                        "requestMethod": "GET"
+                                    },
+                                    "formatSettings": {
+                                        "type": "BinaryReadSettings"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "type": "Binary",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "HttpServerLocation",
+                                                "relativeUrl": {
+                                                    "value": "@concat('trip-data/yellow_tripdata_',item(),'.parquet')",
+                                                    "type": "Expression"
+                                                }
+                                            }
+                                        },
+                                        "externalReferences": {
+                                            "connection": "924a4398-2d40-479a-b073-cb1b1de9a852"
+                                        }
+                                    }
+                                },
+                                "sink": {
+                                    "type": "BinarySink",
+                                    "storeSettings": {
+                                        "type": "AzureBlobStorageWriteSettings"
+                                    },
+                                    "datasetSettings": {
+                                        "annotations": [],
+                                        "connectionSettings": {
+                                            "name": "lh_bronze",
+                                            "properties": {
+                                                "annotations": [],
+                                                "type": "Lakehouse",
+                                                "typeProperties": {
+                                                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                                                    "artifactId": "c1a1ea6c-c97e-41cd-a686-d486e9e8c237",
+                                                    "rootFolder": "Files"
+                                                },
+                                                "externalReferences": {
+                                                    "connection": "ca58f179-d63a-4053-a8c1-62eb50284152"
+                                                }
+                                            }
+                                        },
+                                        "type": "Binary",
+                                        "typeProperties": {
+                                            "location": {
+                                                "type": "LakehouseLocation",
+                                                "fileName": {
+                                                    "value": "@concat('yellow_tripdata_',item(),'.parquet')",
+                                                    "type": "Expression"
+                                                },
+                                                "folderPath": "taxi/yellow"
+                                            }
+                                        }
+                                    }
+                                },
+                                "enableStaging": false
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "name": "zone_lookup",
+                "type": "Copy",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "source": {
+                        "type": "BinarySource",
+                        "storeSettings": {
+                            "type": "HttpReadSettings",
+                            "requestMethod": "GET"
+                        },
+                        "formatSettings": {
+                            "type": "BinaryReadSettings"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "type": "Binary",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "HttpServerLocation",
+                                    "relativeUrl": "misc/taxi_zone_lookup.csv"
+                                }
+                            },
+                            "externalReferences": {
+                                "connection": "924a4398-2d40-479a-b073-cb1b1de9a852"
+                            }
+                        }
+                    },
+                    "sink": {
+                        "type": "BinarySink",
+                        "storeSettings": {
+                            "type": "LakehouseWriteSettings"
+                        },
+                        "datasetSettings": {
+                            "annotations": [],
+                            "connectionSettings": {
+                                "name": "lh_bronze",
+                                "properties": {
+                                    "annotations": [],
+                                    "type": "Lakehouse",
+                                    "typeProperties": {
+                                        "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                                        "artifactId": "c1a1ea6c-c97e-41cd-a686-d486e9e8c237",
+                                        "rootFolder": "Files"
+                                    },
+                                    "externalReferences": {
+                                        "connection": "ca58f179-d63a-4053-a8c1-62eb50284152"
+                                    }
+                                }
+                            },
+                            "type": "Binary",
+                            "typeProperties": {
+                                "location": {
+                                    "type": "LakehouseLocation",
+                                    "fileName": "taxi_zone_lookup.csv",
+                                    "folderPath": "taxi/lookup"
+                                }
+                            }
+                        }
+                    },
+                    "enableStaging": false
+                }
+            }
+        ],
+        "parameters": {
+            "months": {
+                "type": "array",
+                "defaultValue": [
+                    "2025-01",
+                    "2025-02",
+                    "2025-03",
+                    "2025-04",
+                    "2025-05",
+                    "2025-06"
+                ]
+            }
+        },
+        "lastModifiedByObjectId": "83117b5a-d167-4c93-9a2e-27140a98a192",
+        "lastPublishTime": "2026-11-21T17:25:06Z"
+    }
+}
