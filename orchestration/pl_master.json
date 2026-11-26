@@ -1,0 +1,303 @@
+{
+    "name": "pl_master",
+    "objectId": "17d504a9-6466-48f4-b933-0485fc1fbd0e",
+    "properties": {
+        "activities": [
+            {
+                "name": "Bronze_Taxi",
+                "type": "InvokePipeline",
+                "dependsOn": [],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "waitOnCompletion": true,
+                    "operationType": "InvokeFabricPipeline",
+                    "pipelineId": "32c5926b-03a3-4564-bff9-d85784339461",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "parameters": {
+                        "months": {
+                            "value": "@pipeline().parameters.months",
+                            "type": "Expression"
+                        }
+                    }
+                },
+                "externalReferences": {
+                    "connection": "93ce511b-9c8b-4e4f-8bad-938907b42b2f"
+                }
+            },
+            {
+                "name": "Bronze_OpenAQ",
+                "type": "RefreshDataflow",
+                "dependsOn": [
+                    {
+                        "activity": "Bronze_FX",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 2,
+                    "retryIntervalInSeconds": 60,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "dataflowId": "d02a8db4-c9ae-4d0e-9595-33196e9c89bb",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "notifyOption": "NoNotification",
+                    "dataflowType": "DataflowFabric",
+                    "executeMashupQueriesOnly": true
+                }
+            },
+            {
+                "name": "Bronze_FX",
+                "type": "RefreshDataflow",
+                "dependsOn": [
+                    {
+                        "activity": "Bronze_GDP",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 2,
+                    "retryIntervalInSeconds": 60,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "dataflowId": "8a400eda-8507-4159-bfb5-8e5dc8e1b897",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "notifyOption": "NoNotification",
+                    "dataflowType": "DataflowFabric",
+                    "executeMashupQueriesOnly": true
+                }
+            },
+            {
+                "name": "Bronze_GDP",
+                "type": "RefreshDataflow",
+                "dependsOn": [
+                    {
+                        "activity": "Bronze_Taxi",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 2,
+                    "retryIntervalInSeconds": 60,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "dataflowId": "4a3a589c-8ce7-406d-9a7a-4f252bd292ca",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "notifyOption": "NoNotification",
+                    "dataflowType": "DataflowFabric",
+                    "executeMashupQueriesOnly": true
+                }
+            },
+            {
+                "name": "Silver_Taxi",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Bronze_OpenAQ",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "8b3c876b-c07f-43a1-846c-3f37bd682b57",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "parameters": {
+                        "start_date": {
+                            "value": {
+                                "value": "@concat(first(pipeline().parameters.months), '-01')",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "end_date": {
+                            "value": {
+                                "value": "@last(pipeline().parameters.months)",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                },
+                "externalReferences": {
+                    "connection": "3110e9a8-78e6-463a-bad0-2692447da1fe"
+                }
+            },
+            {
+                "name": "Silver_Economy",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Silver_Taxi",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "d71a203c-61ae-4c75-aebf-cf3d268d51da",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b"
+                },
+                "externalReferences": {
+                    "connection": "3110e9a8-78e6-463a-bad0-2692447da1fe"
+                }
+            },
+            {
+                "name": "Silver_OpenAQ",
+                "type": "TridentNotebook",
+                "dependsOn": [
+                    {
+                        "activity": "Silver_Economy",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "notebookId": "ab4bd2a9-f289-4824-bc1f-9d5308734d37",
+                    "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b",
+                    "parameters": {
+                        "start_month": {
+                            "value": {
+                                "value": "@first(pipeline().parameters.months)",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        },
+                        "end_month": {
+                            "value": {
+                                "value": "@last(pipeline().parameters.months)",
+                                "type": "Expression"
+                            },
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Gold_Dimensions",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Silver_OpenAQ",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_load_dimensions]"
+                },
+                "linkedService": {
+                    "name": "gold",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "hra74inlkouufdzdmrzfgy6cci-cou7obcw6kpeli3sz6zqhn6nhm.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "3b2d79e4-fd02-46d0-9fb6-30dd4fd515b4",
+                            "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b"
+                        }
+                    }
+                }
+            },
+            {
+                "name": "Gold_Facts",
+                "type": "SqlServerStoredProcedure",
+                "dependsOn": [
+                    {
+                        "activity": "Gold_Dimensions",
+                        "dependencyConditions": [
+                            "Succeeded"
+                        ]
+                    }
+                ],
+                "policy": {
+                    "timeout": "0.12:00:00",
+                    "retry": 0,
+                    "retryIntervalInSeconds": 30,
+                    "secureOutput": false,
+                    "secureInput": false
+                },
+                "typeProperties": {
+                    "storedProcedureName": "[dbo].[usp_load_facts]"
+                },
+                "linkedService": {
+                    "name": "gold",
+                    "properties": {
+                        "annotations": [],
+                        "type": "DataWarehouse",
+                        "typeProperties": {
+                            "endpoint": "hra74inlkouufdzdmrzfgy6cci-cou7obcw6kpeli3sz6zqhn6nhm.datawarehouse.fabric.microsoft.com",
+                            "artifactId": "3b2d79e4-fd02-46d0-9fb6-30dd4fd515b4",
+                            "workspaceId": "04f7a913-f256-459e-a372-cfb303b7cd3b"
+                        }
+                    }
+                }
+            }
+        ],
+        "parameters": {
+            "months": {
+                "type": "array",
+                "defaultValue": [
+                    "2025-01",
+                    "2025-02",
+                    "2025-03",
+                    "2025-04",
+                    "2025-05",
+                    "2025-06"
+                ]
+            }
+        },
+        "lastModifiedByObjectId": "83117b5a-d167-4c93-9a2e-27140a98a192",
+        "lastPublishTime": "2026-11-25T23:53:57Z"
+    }
+}
